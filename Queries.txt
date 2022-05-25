@@ -1,0 +1,76 @@
+/* Query 1 */
+
+WITH t1 AS (
+	SELECT inv.BillingCountry Country, g.name Genre_name, count(*) order_count
+	FROM Invoice inv
+	JOIN InvoiceLine invl
+	ON Inv.InvoiceId = Invl.InvoiceId
+	JOIN Track t
+	ON invl.TrackId = t.TrackId
+	JOIN Genre g
+	ON t.GenreId = g.GenreId
+	JOIN Album al
+	ON t.AlbumId = al.AlbumId
+	JOIN Artist art
+	ON al.ArtistId = art.ArtistId
+	GROUP BY 1,2
+	ORDER BY 1), 
+t2 AS(
+	SELECT Country, Max(order_count) Top_purchases
+	FROM t1
+	GROUP BY 1)
+	
+SELECT t2.*, t1.Genre_name
+FROM t2
+JOIN t1 
+ON t1.Country = t2.Country AND t1.order_count = t2.Top_purchases
+
+-----------------------------------------------------------------------------------
+/* Query 2 */
+
+SELECT art.Name Artist_Name, SUM(invl.UnitPrice*invl.Quantity) Total_Sales
+FROM InvoiceLine invl
+JOIN Track t
+ON invl.TrackId = t.TrackId
+JOIN Album al
+ON t.AlbumId = al.AlbumId
+JOIN Artist art
+ON al.ArtistId = art.ArtistId
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 10
+
+-----------------------------------------------------------------------------------
+/* Query 3 */
+WITH t1 AS(
+	SELECT inv.CustomerId customer_id, inv.BillingCountry Country, sum(total) Total_Spent
+	FROM Invoice inv
+	GROUP BY 1,2
+	ORDER by 3 DESC),
+t2 AS(	
+	SELECT t1.customer_id Customer_id, t1.Country Country, MAX(Total_Spent) Total_Spent
+	FROM t1
+	GROUP BY 2)
+SELECT t1.*, cus.FirstName, cus.LastName
+FROM t1
+JOIN Customer cus
+ON t1.Customer_id = cus.CustomerId
+JOIN t2
+ON t1.Country = t2.Country AND t1.Total_Spent = t2.Total_Spent
+ORDER BY t2.Country
+	
+	
+
+-----------------------------------------------------------------------------------
+/* Query 4 */
+SELECT STRFTIME('%Y', inv.InvoiceDate) Year, g.Name Genre_Name, Sum(invl.UnitPrice*invl.Quantity) total_sales
+FROM Invoice inv
+JOIN InvoiceLine invl
+ON Inv.InvoiceId = Invl.InvoiceId
+JOIN Track t
+ON invl.TrackId = t.TrackId
+JOIN Genre g
+ON t.GenreId = g.GenreId
+GROUP BY 1,2
+ORDER BY 1 , 3 DESC
+
